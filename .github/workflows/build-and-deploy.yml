@@ -1,0 +1,36 @@
+name: Build Substack Importer and deploy to SVN
+
+on:
+  push:
+    tags:
+      - "*"
+
+  # Allow manually triggering the workflow.
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: 'Build and deploy'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+
+      - name: Composer install
+        uses: "ramsey/composer-install@v1"
+        with:
+          composer-options: "--no-dev --ignore-platform-reqs"
+      - name: Deploy to SVN
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        env:
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          ASSETS_DIR: assets
+          SLUG: substack-importer
+

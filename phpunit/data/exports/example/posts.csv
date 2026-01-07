@@ -1,0 +1,2 @@
+post_id,post_date,is_published,email_sent_at,type,audience,title,subtitle,podcast_url
+123.example-post,2021-03-09T04:44:14.437Z,true,2021-03-09T04:44:14.437Z,newsletter,everyone,A Sample Substack Post!,Subtitle Example,
