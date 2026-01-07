@@ -11,7 +11,7 @@ Testing the plugin locally is easiest done by using [wp-env](https://make.wordpr
 
 ## Set up your local environment
 
-The easiest way to run manual and unit tests for the Substack Importer is by using [wp-en](https://make.wordpress.org/core/2020/03/03/wp-env-simple-local-environments-for-wordpress/).
+The easiest way to run manual and unit tests for the Substack Importer is by using [wp-env](https://make.wordpress.org/core/2020/03/03/wp-env-simple-local-environments-for-wordpress/).
 The instructions here assume you are using wp-env.
 
 Steps:
