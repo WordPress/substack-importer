@@ -155,12 +155,16 @@ jobs:
       # For WP < 5.9 with PHP < 8.0 (TYPE=3), constrain PHPUnit to version 7.x as WP doesn't support PHPUnit 8+.
       - name: Constrain PHPUnit to version 7.x for older WP versions
         if: ${{ steps.composer_toggle.outputs.TYPE == '3' }}
-        run: composer require --dev phpunit/phpunit:"^7.5" --with-all-dependencies --no-interaction
+        run: |
+          composer require --dev phpunit/phpunit:"^7.5" --no-update --no-interaction
+          composer update phpunit/phpunit --with-dependencies --no-interaction
 
       # For WP < 5.9 with PHP 8.0+ (TYPE=4), constrain PHPUnit to version 7.x with ignore platform reqs.
       - name: Constrain PHPUnit to version 7.x for older WP with PHP 8.0+
         if: ${{ steps.composer_toggle.outputs.TYPE == '4' }}
-        run: composer require --dev phpunit/phpunit:"^7.5" --ignore-platform-req=php --with-all-dependencies --no-interaction
+        run: |
+          composer require --dev phpunit/phpunit:"^7.5" --no-update --no-interaction
+          composer update phpunit/phpunit --with-dependencies --ignore-platform-req=php --no-interaction
 
       # Install dependencies and handle caching in one go.
       # @link https://github.com/marketplace/actions/install-php-dependencies-with-composer
