@@ -61,13 +61,6 @@ jobs:
           - php: "8.1"
             wp: "6.2"
             experimental: false
-          # PHP 8.0 is beta-supported since WP 5.6.
-          - php: "8.0"
-            wp: "latest"
-            experimental: false
-          - php: "8.0"
-            wp: "5.6"
-            experimental: false
           # PHP 7.4 is supported since WP 5.3.
           - php: "7.4"
             wp: "latest"
