@@ -120,17 +120,17 @@ jobs:
 
       # Determine the type of Composer install which is needed.
       # 1. WP 5.9 or higher - all PHPUnit versions needed are supported, use the most appropriate one.
-      # 2. WP 5.9 or higher with PHP 8.2 (RC) - not all dependencies of PHPUnit have declared PHP 8.2 compatibility, so needs ignore platform.
+      # 2. WP 5.9 or higher with PHP 8.2 or PHP 7.2 - not all dependencies have declared compatibility, so needs ignore platform.
       # 3. WP < 5.9 with PHP < 8.0 - PHPUnit 5 - 7 supported, use the most appropriate one.
       # 4. WP < 5.9 with PHP 8.0 or higher - PHPUnit 5 - 7 supported, needs ignore platform reqs to install PHPUnit 7 for PHP >= 8.0.
       - name: Determine the type of Composer install to use
         id: composer_toggle
         run: |
           if [[ "${{ matrix.wp }}" =~ ^(trunk|latest|5\.9|[6789]\.[0-9])$ ]]; then
-            if [[ "${{ matrix.php }}" != "8.2" ]]; then
-              echo 'TYPE=1' >> $GITHUB_OUTPUT
-            else
+            if [[ "${{ matrix.php }}" == "8.2" || "${{ matrix.php }}" == "7.2" ]]; then
               echo 'TYPE=2' >> $GITHUB_OUTPUT
+            else
+              echo 'TYPE=1' >> $GITHUB_OUTPUT
             fi
           elif [[ "${{ matrix.php }}" > "7.4" ]]; then
             echo 'TYPE=4' >> $GITHUB_OUTPUT
