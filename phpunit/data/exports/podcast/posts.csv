@@ -1,0 +1,2 @@
+post_id,post_date,is_published,email_sent_at,type,audience,title,subtitle,podcast_url
+123.example-podcast,2021-04-29T13:33:33.337Z,true,2021-04-30T13:33:33.337Z,podcast,everyone,A Podcast!,,http://example.com/podcast.mpga

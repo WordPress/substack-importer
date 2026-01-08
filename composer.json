@@ -1,0 +1,46 @@
+{
+  "name": "wordpress/substack-importer",
+  "type": "wordpress-plugin",
+  "license": "GPL-2.0-or-later",
+  "description": "The Substack Importer for WordPress",
+  "keywords": [
+    "substack",
+    "wordpress",
+    "importer",
+    "wp"
+  ],
+  "support": {
+    "issues": "https://github.com/wordpress/substack-importer/issues"
+  },
+  "config": {
+    "process-timeout": 0,
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    }
+  },
+  "require-dev": {
+    "wp-coding-standards/wpcs": "^3.1",
+    "phpcompatibility/phpcompatibility-wp": "^2.1",
+    "yoast/phpunit-polyfills": "^1.0.1",
+    "phpunit/phpunit": "^5.7.21 || ^6.5 || ^7.5 || ^8.0"
+  },
+  "require": {
+    "automattic/wxr-generator": "dev-trunk"
+  },
+  "autoload": {
+    "classmap": [
+      "includes/"
+    ]
+  },
+  "scripts": {
+    "format": "phpcbf --standard=phpcs.xml.dist --report-summary --report-source",
+    "lint": "phpcs --standard=phpcs.xml.dist --runtime-set ignore_warnings_on_exit 1",
+    "test": "phpunit",
+    "test:watch": "phpunit-watcher watch < /dev/tty"
+  },
+  "repositories": [{
+      "type": "vcs",
+      "url": "https://github.com/Automattic/wxr-generator"
+    }
+  ]
+}

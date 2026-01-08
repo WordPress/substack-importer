@@ -1,0 +1,175 @@
+{
+  "id": 123,
+  "uuid": "d0c39177-253b-4122-9e33-d218f98d70d7",
+  "publication_id": 123,
+  "type": "newsletter",
+  "title": "A Sample Substack Post!",
+  "social_title": null,
+  "section_id": null,
+  "search_engine_title": null,
+  "search_engine_description": null,
+  "subtitle": "Just trying things out...",
+  "slug": "example-post",
+  "post_date": "2021-03-09T04:44:14.437Z",
+  "podcast_url": "",
+  "podcast_duration": null,
+  "audience": "everyone",
+  "write_comment_permissions": "everyone",
+  "default_comment_sort": null,
+  "canonical_url": "https://example.substack.com/p/example-post",
+  "latest_comment_id": 1467713,
+  "comment_count": 17,
+  "reactions": {
+    "❤": 0
+  },
+  "top_exclusions": [],
+  "pins": [],
+  "next_slug": "a-podcast-post-on-substack",
+  "prev_slug": "coming-soon",
+  "cover_image": "https://randomuser.me/api/portraits/lego/1.jpg",
+  "description": "Just trying things out...",
+  "body_html": "<p>Dummy content</p>",
+  "publishedBylines": [
+    {
+      "id": 30454520,
+      "name": "Substack User",
+      "photo_url": "https://randomuser.me/api/portraits/lego/1.jpg",
+      "bio": "Hello I am a Substack user",
+      "profile_set_up_at": null,
+      "tos_accepted_at": "2021-03-09T04:42:30.615Z"
+    }
+  ],
+  "reaction": false,
+  "comments": [
+    {
+      "id": 1467713,
+      "user_id": 30454520,
+      "publication_id": 309526,
+      "post_id": 33434243,
+      "ancestor_path": "",
+      "body": "test",
+      "date": "2021-03-11T07:59:52.309Z",
+      "deleted": false,
+      "name": "Substack Subscriber",
+      "photo_url": "https://randomuser.me/api/portraits/lego/1.jpg",
+      "reactions": {
+        "❤": 0
+      },
+      "is_author": true,
+      "reactor_names": [],
+      "reaction": null,
+      "children": [],
+      "bans": [],
+      "user_banned": false,
+      "user_banned_for_comment": false,
+      "tags": [
+        "author"
+      ],
+      "email": "substack-subscriber@example.com",
+      "score": 0.02976190476190476
+    },
+    {
+      "id": 1467523,
+      "user_id": 30454520,
+      "publication_id": 309526,
+      "post_id": 33434243,
+      "ancestor_path": "",
+      "body": "A comment that has replies.",
+      "date": "2021-03-11T06:41:31.112Z",
+      "deleted": false,
+      "name": "Substack Subscriber",
+      "photo_url": "https://randomuser.me/api/portraits/lego/1.jpg",
+      "reactions": {
+        "❤": 0
+      },
+      "is_author": true,
+      "reactor_names": [],
+      "reaction": null,
+      "children": [
+        {
+          "id": 1467610,
+          "user_id": 30454520,
+          "publication_id": 309526,
+          "post_id": 33434243,
+          "ancestor_path": "1467523",
+          "body": "Reply - nested 1 level",
+          "date": "2021-03-11T07:22:13.568Z",
+          "deleted": false,
+          "name": "Substack Subscriber",
+          "photo_url": "https://randomuser.me/api/portraits/lego/1.jpg",
+          "reactions": {
+            "❤": 0
+          },
+          "is_author": true,
+          "reactor_names": [],
+          "reaction": null,
+          "children": [
+            {
+              "id": 1467623,
+              "user_id": 30454520,
+              "publication_id": 309526,
+              "post_id": 33434243,
+              "ancestor_path": "1467523.1467610",
+              "body": "Reply - nested 2 levels",
+              "date": "2021-03-11T07:25:29.568Z",
+              "deleted": false,
+              "name": "Substack Subscriber",
+              "photo_url": "https://randomuser.me/api/portraits/lego/1.jpg",
+              "reactions": {
+                "❤": 0
+              },
+              "is_author": true,
+              "reactor_names": [],
+              "reaction": null,
+              "children": [
+                {
+                  "id": 1467624,
+                  "user_id": 30454520,
+                  "publication_id": 309526,
+                  "post_id": 33434243,
+                  "ancestor_path": "1467523.1467610.1467623",
+                  "body": "Reply - nested 3 levels",
+                  "date": "2021-03-11T07:25:46.157Z",
+                  "deleted": false,
+                  "name": "Substack Subscriber",
+                  "photo_url": "https://randomuser.me/api/portraits/lego/1.jpg",
+                  "reactions": {
+                    "❤": 0
+                  },
+                  "is_author": true,
+                  "reactor_names": [],
+                  "reaction": null,
+                  "children": [],
+                  "bans": [],
+                  "user_banned": false,
+                  "user_banned_for_comment": false,
+                  "tags": [
+                    "author"
+                  ],
+                  "email": "substack-subscriber@example.com",
+                  "score": 0.02976190476190476
+                }
+              ],
+              "bans": [],
+              "user_banned": false,
+              "user_banned_for_comment": false,
+              "tags": [
+                "author"
+              ],
+              "email": "substack-subscriber@example.com",
+              "score": 0.02976190476190476
+            }
+          ],
+          "bans": [],
+          "user_banned": false,
+          "user_banned_for_comment": false,
+          "tags": [
+            "author"
+          ],
+          "email": "substack-subscriber@example.com",
+          "score": 0.02976190476190476
+        }
+      ]
+    }
+  ]
+}
