@@ -4,9 +4,13 @@ on:
   # Run on all pushes for default branch and on all pull requests.
   # Prevent the build from running when there are only irrelevant changes.
   push:
-    branches:
-      - master
+    paths-ignore:
+      - "**.md"
+      - "**.txt"
   pull_request:
+    paths-ignore:
+      - "**.md"
+      - "**.txt"
   schedule:
     - cron: "0 0 * * 1"
   # Allow manually triggering the workflow.
