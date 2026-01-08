@@ -80,11 +80,6 @@ jobs:
             wp: "6.3"
             experimental: false
 
-          # Experimental builds. These are allowed to fail.
-          - php: "7.4"
-            wp: "trunk"
-            experimental: true
-
     name: "PHP ${{ matrix.php }} - WP ${{ matrix.wp }}"
 
     continue-on-error: ${{ matrix.experimental }}
