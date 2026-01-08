@@ -165,7 +165,7 @@ jobs:
       # Install dependencies and handle caching in one go.
       # @link https://github.com/marketplace/actions/install-php-dependencies-with-composer
       - name: Install Composer dependencies - normal
-        if: ${{ steps.composer_toggle.outputs.TYPE == '1' || steps.composer_toggle.outputs.TYPE == '3' }}
+        if: ${{ steps.composer_toggle.outputs.TYPE == '1' }}
         uses: "ramsey/composer-install@v3"
         with:
           # Bust the cache at least once a month - output format: YYYY-MM-DD.
@@ -173,7 +173,7 @@ jobs:
 
       # For PHP 8.0 and above on WP 5.2 - 5.8, we need to install with ignore platform reqs as not all dependencies allow it.
       - name: Install Composer dependencies with ignore platform reqs
-        if: ${{ steps.composer_toggle.outputs.TYPE == '2' || steps.composer_toggle.outputs.TYPE == '4' }}
+        if: ${{ steps.composer_toggle.outputs.TYPE == '2' }}
         uses: "ramsey/composer-install@v3"
         with:
           composer-options: --ignore-platform-req=php
