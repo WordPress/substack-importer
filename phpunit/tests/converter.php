@@ -425,4 +425,189 @@ class Tests_Converter extends WP_UnitTestCase {
 
 		$converter->convert();
 	}
+
+	/**
+	 * Test that the paywall marker text can be filtered.
+	 */
+	public function testPaywallMarkerTextFilter() {
+
+		$custom_marker = 'Custom paywall marker text';
+
+		add_filter(
+			'substack_importer_paywall_marker_text',
+			function () use ( $custom_marker ) {
+				return $custom_marker;
+			}
+		);
+
+		$generator = $this->createMock( 'WXR_Generator\Generator' );
+
+		$generator->expects( $this->at( 3 ) )
+				->method( 'add_post' )
+				->willReturnCallback(
+					function ( $post ) use ( $custom_marker ) {
+						$this->assertStringContainsString(
+							'<!-- wp:paragraph --><p>' . $custom_marker . '</p>',
+							$post['content']
+						);
+						// Ensure the default marker is not present.
+						$this->assertStringNotContainsString(
+							'The content below was originally paywalled.',
+							$post['content']
+						);
+					}
+				);
+
+		$converter = new Converter( $generator, $this->getZipFilePath( 'example' ) );
+
+		$converter->convert();
+
+		remove_all_filters( 'substack_importer_paywall_marker_text' );
+	}
+
+	/**
+	 * Test that the entire paywall conversion can be overridden.
+	 */
+	public function testPaywallContentFilter() {
+
+		add_filter(
+			'substack_importer_paywall_content',
+			function ( $result, $node, $parent_node ) {
+				// Create a custom node to replace the paywall.
+				$new_node = new DOMElement( 'div' );
+				$parent_node->replaceChild( $new_node, $node );
+				$new_node->setAttribute( 'class', 'custom-paywall-block' );
+
+				return array(
+					'node'             => $new_node,
+					'block_attributes' => array( 'className' => 'custom-paywall-block' ),
+					'block_name'       => 'wp:group',
+				);
+			},
+			10,
+			3
+		);
+
+		$generator = $this->createMock( 'WXR_Generator\Generator' );
+
+		$generator->expects( $this->at( 3 ) )
+				->method( 'add_post' )
+				->willReturnCallback(
+					function ( $post ) {
+						// Verify custom block is present.
+						$this->assertStringContainsString(
+							'<!-- wp:group {"className":"custom-paywall-block"} -->',
+							$post['content']
+						);
+						// Ensure the default paywall paragraph is not present.
+						$this->assertStringNotContainsString(
+							'The content below was originally paywalled.',
+							$post['content']
+						);
+					}
+				);
+
+		$converter = new Converter( $generator, $this->getZipFilePath( 'example' ) );
+
+		$converter->convert();
+
+		remove_all_filters( 'substack_importer_paywall_content' );
+	}
+
+	/**
+	 * Test that post content can be modified after Gutenberg conversion.
+	 */
+	public function testPostContentAfterConversionFilter() {
+
+		$wrapper_start = '<!-- wp:group {"className":"test-wrapper"} --><div class="wp-block-group test-wrapper">';
+		$wrapper_end   = '</div><!-- /wp:group -->';
+
+		add_filter(
+			'substack_importer_post_content_after_conversion',
+			function ( $post_content, $post ) use ( $wrapper_start, $wrapper_end ) {
+				// Verify filter receives correct parameters.
+				$this->assertIsString( $post_content );
+				$this->assertIsArray( $post );
+				$this->assertArrayHasKey( 'title', $post );
+
+				// Wrap the entire content in a group block.
+				return $wrapper_start . $post_content . $wrapper_end;
+			},
+			10,
+			3
+		);
+
+		$generator = $this->createMock( 'WXR_Generator\Generator' );
+
+		$generator->expects( $this->at( 3 ) )
+				->method( 'add_post' )
+				->willReturnCallback(
+					function ( $post ) use ( $wrapper_start, $wrapper_end ) {
+						// Verify the content is wrapped.
+						$this->assertStringStartsWith( $wrapper_start, $post['content'] );
+						$this->assertStringEndsWith( $wrapper_end, $post['content'] );
+					}
+				);
+
+		$converter = new Converter( $generator, $this->getZipFilePath( 'example' ) );
+
+		$converter->convert();
+
+		remove_all_filters( 'substack_importer_post_content_after_conversion' );
+	}
+
+	/**
+	 * Test that the post content after conversion filter can wrap paywalled content.
+	 */
+	public function testPostContentAfterConversionFilterWrapsPaywalledContent() {
+
+		$paywall_marker   = "<!-- wp:paragraph --><p>The content below was originally paywalled.</p>\n<!-- /wp:paragraph -->";
+		$restricted_start = '<!-- wp:test/restricted -->';
+		$restricted_end   = '<!-- /wp:test/restricted -->';
+
+		add_filter(
+			'substack_importer_post_content_after_conversion',
+			function ( $post_content ) use ( $paywall_marker, $restricted_start, $restricted_end ) {
+				$parts = explode( $paywall_marker, $post_content );
+
+				if ( count( $parts ) > 1 ) {
+					$free_content = $parts[0];
+					$paid_content = $parts[1];
+
+					return $free_content . $restricted_start . $paid_content . $restricted_end;
+				}
+
+				return $post_content;
+			},
+			10,
+			3
+		);
+
+		$generator = $this->createMock( 'WXR_Generator\Generator' );
+
+		$generator->expects( $this->at( 3 ) )
+				->method( 'add_post' )
+				->willReturnCallback(
+					function ( $post ) use ( $restricted_start, $restricted_end, $paywall_marker ) {
+						// Verify the paywall marker is removed (it's used as the split point).
+						$this->assertStringNotContainsString( $paywall_marker, $post['content'] );
+
+						// Verify the restricted block wrapper is present.
+						$this->assertStringContainsString( $restricted_start, $post['content'] );
+						$this->assertStringContainsString( $restricted_end, $post['content'] );
+
+						// Verify content after paywall is wrapped (e.g., the resized image that was after paywall).
+						$this->assertRegExp(
+							'/' . preg_quote( $restricted_start, '/' ) . '.*Resized image.*' . preg_quote( $restricted_end, '/' ) . '/s',
+							$post['content']
+						);
+					}
+				);
+
+		$converter = new Converter( $generator, $this->getZipFilePath( 'example' ) );
+
+		$converter->convert();
+
+		remove_all_filters( 'substack_importer_post_content_after_conversion' );
+	}
 }
