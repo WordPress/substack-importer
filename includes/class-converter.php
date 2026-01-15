@@ -199,10 +199,32 @@ class Converter {
 				$post['html_body'] = $this->add_subtitle( $post );
 			}
 
+			$post_content = $this->convert_html_to_gutenberg( $post['html_body'] );
+
+			/**
+			 * Filter the post content after Gutenberg conversion.
+			 *
+			 * This filter allows modification of the converted Gutenberg block content
+			 * before it is added to the WXR. Useful for wrapping paywalled content in
+			 * custom blocks (e.g., membership plugins).
+			 *
+			 * @since 1.2.0
+			 *
+			 * @param string     $post_content The converted Gutenberg block content.
+			 * @param array      $post         The original Substack post data.
+			 * @param array|null $post_meta    Additional post metadata from Substack API.
+			 */
+			$post_content = apply_filters(
+				'substack_importer_post_content_after_conversion',
+				$post_content,
+				$post,
+				$post_meta
+			);
+
 			$post_data = array(
 				'id'              => $id,
 				'title'           => $post['title'],
-				'content'         => $this->convert_html_to_gutenberg( $post['html_body'] ),
+				'content'         => $post_content,
 				'date'            => 'true' === $post['is_published'] ? $post['post_date'] : '',
 				'status'          => 'true' === $post['is_published'] ? 'publish' : 'draft',
 				'post_date_gmt'   => $post['post_date'],
@@ -1131,11 +1153,51 @@ class Converter {
 	 * @param DomElement $node The node to be converted.
 	 * @param DomElement $parent The parent of the node to be converted.
 	 *
-	 * @return DomElement The new node.
+	 * @return array The converted node data.
 	 */
 	protected function convert_paywall_node( DomElement $node, DomElement $parent ) {
+		/**
+		 * Filter the paywall marker text.
+		 *
+		 * @since 1.2.0
+		 *
+		 * @param string     $marker_text The default paywall marker text.
+		 * @param DomElement $node        The paywall node being converted.
+		 * @param DomElement $parent      The parent element.
+		 */
+		$marker_text = apply_filters(
+			'substack_importer_paywall_marker_text',
+			__( 'The content below was originally paywalled.', 'substack-importer' ),
+			$node,
+			$parent
+		);
+
+		/**
+		 * Filter the entire paywall conversion result.
+		 *
+		 * Return a non-null value to override the default conversion.
+		 * The returned array should have keys: 'node', 'block_attributes', 'block_name'.
+		 *
+		 * @since 1.2.0
+		 *
+		 * @param array|null $result The conversion result, null to use default.
+		 * @param DomElement $node   The paywall node being converted.
+		 * @param DomElement $parent The parent element.
+		 */
+		$filtered_result = apply_filters(
+			'substack_importer_paywall_content',
+			null,
+			$node,
+			$parent
+		);
+
+		if ( null !== $filtered_result ) {
+			return $filtered_result;
+		}
+
+		// Default behavior: create a paragraph with the marker text.
 		$new_node = new DomElement( 'p' );
-		$text     = new DOMText( __( 'The content below was originally paywalled.' ) );
+		$text     = new DOMText( $marker_text );
 
 		$parent->replaceChild( $new_node, $node );
 		$new_node->appendChild( $text );
