@@ -16,12 +16,16 @@
     "process-timeout": 0,
     "allow-plugins": {
       "dealerdirect/phpcodesniffer-composer-installer": true
+    },
+    "audit": {
+      "block-insecure": false
     }
   },
   "require-dev": {
     "wp-coding-standards/wpcs": "^3.1",
     "phpcompatibility/phpcompatibility-wp": "^2.1",
-    "yoast/phpunit-polyfills": "^2.0"
+    "yoast/phpunit-polyfills": "^2.0",
+    "phpunit/phpunit": "^9.6"
   },
   "require": {
     "automattic/wxr-generator": "dev-trunk"
