@@ -44,6 +44,74 @@ Unit tests can now be ran with the following command:
 
 `wp-env run tests-cli --env-cwd=wp-content/plugins/substack-importer vendor/bin/phpunit --configuration=./phpunit.xml.dist`
 
+## Filters
+
+The Substack Importer provides several filters to customize the import process:
+
+### `substack_importer_paywall_marker_text`
+
+Filter the paywall marker text that appears in the imported content.
+
+```php
+add_filter( 'substack_importer_paywall_marker_text', function( $marker_text, $node, $parent ) {
+    return __( 'Premium content below', 'your-textdomain' );
+}, 10, 3 );
+```
+
+**Parameters:**
+- `$marker_text` (string) - The default paywall marker text.
+- `$node` (DOMElement) - The paywall node being converted.
+- `$parent` (DOMElement) - The parent element.
+
+### `substack_importer_paywall_content`
+
+Filter the entire paywall conversion result. Return a non-null value to override the default conversion.
+
+```php
+add_filter( 'substack_importer_paywall_content', function( $result, $node, $parent ) {
+    // Return custom conversion result
+    return array(
+        'node'             => $new_node,
+        'block_attributes' => array(),
+        'block_name'       => 'wp:paragraph',
+    );
+}, 10, 3 );
+```
+
+**Parameters:**
+- `$result` (array|null) - The conversion result, null to use default.
+- `$node` (DOMElement) - The paywall node being converted.
+- `$parent` (DOMElement) - The parent element.
+
+### `substack_importer_post_content_after_conversion`
+
+Filter the post content after Gutenberg conversion but before it is added to the WXR. This is useful for wrapping paywalled content in custom blocks (e.g., membership plugins).
+
+```php
+add_filter( 'substack_importer_post_content_after_conversion', function( $post_content, $post, $post_meta ) {
+    // Find paywall marker and wrap content in custom block
+    $marker = "<!-- wp:paragraph --><p>The content below was originally paywalled.</p>\n<!-- /wp:paragraph -->";
+    $parts = explode( $marker, $post_content );
+
+    if ( count( $parts ) > 1 ) {
+        $free_content = $parts[0];
+        $paid_content = $parts[1];
+
+        // Wrap paid content in your membership block
+        $paid_content = '<!-- wp:your-plugin/restricted -->' . $paid_content . '<!-- /wp:your-plugin/restricted -->';
+
+        return $free_content . $paid_content;
+    }
+
+    return $post_content;
+}, 10, 3 );
+```
+
+**Parameters:**
+- `$post_content` (string) - The converted Gutenberg block content.
+- `$post` (array) - The original Substack post data.
+- `$post_meta` (array|null) - Additional post metadata from Substack API.
+
 ## Publishing the plugin
 
 When a new tag is pushed, the tag will be published to SVN.

@@ -37,6 +37,11 @@ To install the Substack Importer:
 
 == Changelog ==
 
+= 1.2.0 =
+* Enhancement: added `substack_importer_paywall_marker_text` filter to customize paywall marker text.
+* Enhancement: added `substack_importer_paywall_content` filter to override paywall block conversion.
+* Enhancement: added `substack_importer_post_content_after_conversion` filter to modify content after Gutenberg conversion.
+
 = 1.1.2 =
 * Enhancement: support captions for images.
 * Enhancement: support TikTok embeds
@@ -98,6 +103,37 @@ To install the Substack Importer:
 
 = 0.1 =
 Early proof-of-concept version.
+
+== Filters ==
+
+The Substack Importer provides several filters to customize the import process:
+
+= substack_importer_paywall_marker_text =
+
+Filter the paywall marker text that appears in the imported content.
+
+Parameters:
+* `$marker_text` (string) - The default paywall marker text.
+* `$node` (DOMElement) - The paywall node being converted.
+* `$parent` (DOMElement) - The parent element.
+
+= substack_importer_paywall_content =
+
+Filter the entire paywall conversion result. Return a non-null value to override the default conversion.
+
+Parameters:
+* `$result` (array|null) - The conversion result, null to use default.
+* `$node` (DOMElement) - The paywall node being converted.
+* `$parent` (DOMElement) - The parent element.
+
+= substack_importer_post_content_after_conversion =
+
+Filter the post content after Gutenberg conversion but before it is added to the WXR. This is useful for wrapping paywalled content in custom blocks (e.g., membership plugins).
+
+Parameters:
+* `$post_content` (string) - The converted Gutenberg block content.
+* `$post` (array) - The original Substack post data.
+* `$post_meta` (array|null) - Additional post metadata from Substack API.
 
 == Frequently Asked Questions ==
 
