@@ -24,7 +24,8 @@ jobs:
       fail-fast: false
       matrix:
         # Notes regarding supported versions in WP:
-        # The base matrix contains the PHP versions which are supported on all supported WP versions.
+        # PHP 7.4 and 8.0 resolve to PHPUnit 9, which all WP versions support.
+        # PHP 8.1+ resolves to PHPUnit 10, which requires WP 6.5+ test suite.
         php: ["7.4", "8.0"]
         wp: ["latest", "6.2"]
         experimental: [false]
@@ -37,28 +38,28 @@ jobs:
           - php: "8.4"
             wp: "6.7"
             experimental: false
-          # PHP 8.3 is beta-supported since WP 6.4.
+          # PHP 8.3 is beta-supported since WP 6.4, but PHPUnit 10 needs WP 6.5+.
           - php: "8.3"
             wp: "latest"
             experimental: false
           - php: "8.3"
-            wp: "6.4"
+            wp: "6.5"
             experimental: false
-          # PHP 8.2 is beta-supported since WP 6.1.
+          # PHP 8.2 is beta-supported since WP 6.1, but PHPUnit 10 needs WP 6.5+.
           - php: "8.2"
             wp: "latest"
             experimental: false
           - php: "8.2"
-            wp: "6.2"
+            wp: "6.5"
             experimental: false
-          # PHP 8.1 is beta-supported since WP 5.9 and Requests was updated in WP 6.2.
+          # PHP 8.1 is beta-supported since WP 5.9, but PHPUnit 10 needs WP 6.5+.
           - php: "8.1"
             wp: "latest"
             experimental: false
           - php: "8.1"
-            wp: "6.2"
+            wp: "6.5"
             experimental: false
-          # Additional specific WP version builds.
+          # Additional specific WP version builds (PHP <= 8.0 resolves PHPUnit 9).
           - php: "7.4"
             wp: "6.0"
             experimental: false

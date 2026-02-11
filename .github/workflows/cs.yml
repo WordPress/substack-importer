@@ -21,25 +21,25 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v6
 
       - name: Install PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '7.4'
+          php-version: '8.3'
           tools: cs2pr
           coverage: none
 
-      - name: 'Composer: set up PHPCS dependencies'
-        run: |
-          composer require squizlabs/php_codesniffer wp-coding-standards/wpcs phpcompatibility/phpcompatibility-wp dealerdirect/phpcodesniffer-composer-installer
       # Install dependencies and handle caching in one go.
-      # @link https://github.com/marketplace/actions/install-composer-dependencies
+      # PHPCS packages are already defined in composer.json require-dev.
+      # @link https://github.com/marketplace/actions/install-php-dependencies-with-composer
       - name: Install Composer dependencies
-        uses: "ramsey/composer-install@v1"
+        uses: "ramsey/composer-install@v3"
+        with:
+          dependency-versions: highest
+          # Bust the cache at least once a month - output format: YYYY-MM-DD.
+          custom-cache-suffix: $(date -u -d "-0 month -$(($(date +%d)-1)) days" "+%F")
 
       # Check the code-style consistency of the PHP files.
       - name: Check PHP code style
-        run: |
-          vendor/bin/phpcs --report-checkstyle=./phpcs-report.xml
-          cs2pr ./phpcs-report.xml
+        run: vendor/bin/phpcs --report-checkstyle=./phpcs-report.xml | cs2pr
