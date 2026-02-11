@@ -24,13 +24,12 @@ jobs:
       fail-fast: false
       matrix:
         # Notes regarding supported versions in WP:
-        # The base matrix only contains the PHP versions which are supported on all supported WP versions.
-        php: ["7.2", "7.3"]
-        wp: ["latest", "5.2"]
+        # The base matrix contains the PHP versions which are supported on all supported WP versions.
+        php: ["7.4", "8.0"]
+        wp: ["latest", "6.2"]
         experimental: [false]
 
         include:
-          # Complement the builds run via the matrix with high/low WP builds for PHP 7.4 up to 8.3.
           # PHP 8.4 is beta-supported since WP 6.7.
           - php: "8.4"
             wp: "latest"
@@ -45,8 +44,7 @@ jobs:
           - php: "8.3"
             wp: "6.4"
             experimental: false
-          # PHP 8.2 is beta-supported since WP 6.1 and Requests was updated in WP 6.2.
-          # That means that WP 6.2 is the earliest WP version which can be used with PHP 8.1 for this plugin.
+          # PHP 8.2 is beta-supported since WP 6.1.
           - php: "8.2"
             wp: "latest"
             experimental: false
@@ -54,29 +52,17 @@ jobs:
             wp: "6.2"
             experimental: false
           # PHP 8.1 is beta-supported since WP 5.9 and Requests was updated in WP 6.2.
-          # That means that WP 6.2 is the earliest WP version which can be used with PHP 8.1 for this plugin.
           - php: "8.1"
             wp: "latest"
             experimental: false
           - php: "8.1"
             wp: "6.2"
             experimental: false
-          # PHP 7.4 is supported since WP 5.3.
+          # Additional specific WP version builds.
           - php: "7.4"
-            wp: "latest"
-            experimental: false
-          - php: "7.4"
-            wp: "5.4"
-            experimental: false
-
-          # Complement the builds run via the matrix with some additional builds against specific WP versions.
-          - php: "7.3"
             wp: "6.0"
             experimental: false
-          - php: "7.2"
-            wp: "5.7"
-            experimental: false
-          - php: "7.4"
+          - php: "8.0"
             wp: "6.3"
             experimental: false
 
@@ -86,13 +72,7 @@ jobs:
 
     services:
       mysql:
-        # WP 5.4 is the first WP version which largely supports MySQL 8.0.
-        # See: https://core.trac.wordpress.org/ticket/49344
-        # During the setting up of these tests, it became clear that MySQL 8.0
-        # in combination with PHP < 7.4 is not properly/sufficiently supported
-        # within WP Core.
-        # See: https://core.trac.wordpress.org/ticket/52496
-        image: mysql:${{ ( matrix.wp == 5.3 && '5.6' ) || ( (matrix.wp < 5.4 || matrix.php < 7.4) && '5.7' ) || '8.0' }}
+        image: mysql:8.0
         env:
           MYSQL_ALLOW_EMPTY_PASSWORD: false
         ports:
@@ -113,62 +93,13 @@ jobs:
       - name: Set up WordPress
         run: phpunit/install.sh wordpress_test root '' 127.0.0.1:3306 ${{ matrix.wp }}
 
-      # Determine the type of Composer install which is needed.
-      # 1. WP 5.9 or higher - all PHPUnit versions needed are supported, use the most appropriate one.
-      # 2. WP 5.9 or higher with PHP 8.2 or PHP 7.2 - not all dependencies have declared compatibility, so needs ignore platform.
-      # 3. WP < 5.9 with PHP < 8.0 - PHPUnit 5 - 7 supported, use the most appropriate one.
-      # 4. WP < 5.9 with PHP 8.0 or higher - PHPUnit 5 - 7 supported, needs ignore platform reqs to install PHPUnit 7 for PHP >= 8.0.
-      - name: Determine the type of Composer install to use
-        id: composer_toggle
-        run: |
-          if [[ "${{ matrix.wp }}" =~ ^(trunk|latest|5\.9|[6789]\.[0-9])$ ]]; then
-            if [[ "${{ matrix.php }}" == "8.2" || "${{ matrix.php }}" == "7.2" ]]; then
-              echo 'TYPE=2' >> $GITHUB_OUTPUT
-            else
-              echo 'TYPE=1' >> $GITHUB_OUTPUT
-            fi
-          elif [[ "${{ matrix.php }}" > "7.4" ]]; then
-            echo 'TYPE=4' >> $GITHUB_OUTPUT
-          else
-            echo 'TYPE=3' >> $GITHUB_OUTPUT
-          fi
-
-      # Remove the PHPUnit requirement for WP 5.9 and higher in favour of letting the Polyfills manage it.
-      # The Composer command will exit with error code 2 as the package is not removed, so ignore "failure" of this step.
-      - name: Conditionally remove PHPUnit requirement
-        if: ${{ steps.composer_toggle.outputs.TYPE == '1' || steps.composer_toggle.outputs.TYPE == '2' }}
-        continue-on-error: true
-        run: composer remove --dev phpunit/phpunit --no-update --no-interaction || true
-
-      # For WP < 5.9 with PHP < 8.0 (TYPE=3), constrain PHPUnit to version 7.x as WP doesn't support PHPUnit 8+.
-      - name: Constrain PHPUnit to version 7.x for older WP versions
-        if: ${{ steps.composer_toggle.outputs.TYPE == '3' }}
-        run: |
-          composer require --dev phpunit/phpunit:"^7.5" --no-update --no-interaction
-          composer update phpunit/phpunit --with-dependencies --no-interaction
-
-      # For WP < 5.9 with PHP 8.0+ (TYPE=4), constrain PHPUnit to version 7.x with ignore platform reqs.
-      - name: Constrain PHPUnit to version 7.x for older WP with PHP 8.0+
-        if: ${{ steps.composer_toggle.outputs.TYPE == '4' }}
-        run: |
-          composer require --dev phpunit/phpunit:"^7.5" --no-update --no-interaction
-          composer update phpunit/phpunit --with-dependencies --ignore-platform-req=php --no-interaction
-
       # Install dependencies and handle caching in one go.
+      # Yoast PHPUnit Polyfills v2 handles installing the correct PHPUnit version automatically.
       # @link https://github.com/marketplace/actions/install-php-dependencies-with-composer
-      - name: Install Composer dependencies - normal
-        if: ${{ steps.composer_toggle.outputs.TYPE == '1' }}
+      - name: Install Composer dependencies
         uses: "ramsey/composer-install@v3"
         with:
           # Bust the cache at least once a month - output format: YYYY-MM-DD.
-          custom-cache-suffix: $(date -u -d "-0 month -$(($(date +%d)-1)) days" "+%F")
-
-      # For PHP 8.0 and above on WP 5.2 - 5.8, we need to install with ignore platform reqs as not all dependencies allow it.
-      - name: Install Composer dependencies with ignore platform reqs
-        if: ${{ steps.composer_toggle.outputs.TYPE == '2' }}
-        uses: "ramsey/composer-install@v3"
-        with:
-          composer-options: --ignore-platform-req=php
           custom-cache-suffix: $(date -u -d "-0 month -$(($(date +%d)-1)) days" "+%F")
 
       - name: Run the unit tests - single site
