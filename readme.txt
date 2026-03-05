@@ -2,8 +2,8 @@
 Contributors: wordpressdotorg
 Tags: importer, substack
 Requires at least: 5.2
-Tested up to: 6.7
-Requires PHP: 7.2
+Tested up to: 6.9
+Requires PHP: 7.4
 Stable tag: 1.1.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -47,6 +47,7 @@ Tests can be run with wp-env or with any local WordPress setup paired with a Doc
 * Enhancement: added `substack_importer_paywall_marker_text` filter to customize paywall marker text.
 * Enhancement: added `substack_importer_paywall_content` filter to override paywall block conversion.
 * Enhancement: added `substack_importer_post_content_after_conversion` filter to modify content after Gutenberg conversion.
+* Compatibility: the plugin now requires PHP 7.3 or higher.
 * Enhancement: added `substack_importer_raw_content` filter to modify raw HTML before Gutenberg conversion.
 * Enhancement: added `substack_importer_subtitle` filter to customize or skip the subtitle heading.
 * Enhancement: added `substack_importer_post_meta` filter to modify post metadata before processing.
