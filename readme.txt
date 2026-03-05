@@ -41,6 +41,7 @@ To install the Substack Importer:
 * Enhancement: added `substack_importer_paywall_marker_text` filter to customize paywall marker text.
 * Enhancement: added `substack_importer_paywall_content` filter to override paywall block conversion.
 * Enhancement: added `substack_importer_post_content_after_conversion` filter to modify content after Gutenberg conversion.
+* Compatibility: the plugin now requires PHP 7.3 or higher.
 
 = 1.1.2 =
 * Enhancement: support captions for images.

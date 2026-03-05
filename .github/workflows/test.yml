@@ -22,14 +22,20 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Lowest supported: PHP 7.4 + oldest WP.
+          # Lowest supported: PHP 7.3 + oldest WP.
+          - php: "7.3"
+            wp: "5.4"
+          # Legacy PHP against latest WordPress.
           - php: "7.4"
-            wp: "6.2"
-          # Highest supported: PHP 8.4 + latest WP.
-          - php: "8.4"
             wp: "latest"
+          # Compatibility middle: modern PHP against older supported WP.
+          - php: "8.2"
+            wp: "6.2"
           # Middle ground: PHP 8.2 + latest WP.
           - php: "8.2"
+            wp: "latest"
+          # Highest supported: PHP 8.4 + latest WP.
+          - php: "8.4"
             wp: "latest"
 
     name: "PHP ${{ matrix.php }} - WP ${{ matrix.wp }}"
