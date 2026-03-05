@@ -195,9 +195,57 @@ class Converter {
 			$id        = (int) $post_id[0];
 			$post_meta = $this->get_post_meta_from_export( $id );
 
+			/**
+			 * Filter the post metadata loaded from the Substack export.
+			 *
+			 * Allows modification of the metadata retrieved from the Substack API
+			 * before it is used for author, comments, and other post data.
+			 *
+			 * @since 1.2.0
+			 *
+			 * @param array|null $post_meta The post metadata from the Substack API response.
+			 * @param array      $post      The raw Substack post data from the CSV.
+			 * @param int        $id        The Substack post ID.
+			 */
+			$post_meta = apply_filters( 'substack_importer_post_meta', $post_meta, $post, $id );
+
+			/**
+			 * Fires before a single Substack post is processed and converted.
+			 *
+			 * Useful for setting up state or performing actions before conversion begins.
+			 *
+			 * @since 1.2.0
+			 *
+			 * @param array      $post      The raw Substack post data from the CSV.
+			 * @param array|null $post_meta The post metadata from the Substack API response.
+			 * @param int        $id        The Substack post ID.
+			 */
+			do_action( 'substack_importer_before_post', $post, $post_meta, $id );
+
 			if ( ! empty( $post['subtitle'] ) ) {
 				$post['html_body'] = $this->add_subtitle( $post );
 			}
+
+			/**
+			 * Filter the raw HTML content before Gutenberg conversion.
+			 *
+			 * This filter runs after the subtitle has been prepended (if present)
+			 * but before the HTML is parsed and converted to Gutenberg blocks.
+			 * Useful for cleaning up or transforming Substack-specific HTML,
+			 * adding custom elements, or stripping unwanted markup.
+			 *
+			 * @since 1.2.0
+			 *
+			 * @param string     $html_body The raw HTML content from the Substack export.
+			 * @param array      $post      The raw Substack post data from the CSV.
+			 * @param array|null $post_meta The post metadata from the Substack API response.
+			 */
+			$post['html_body'] = apply_filters(
+				'substack_importer_raw_content',
+				$post['html_body'],
+				$post,
+				$post_meta
+			);
 
 			$post_content = $this->convert_html_to_gutenberg( $post['html_body'] );
 
@@ -242,12 +290,12 @@ class Converter {
 			$post_data['author']   = $post_meta ? $this->get_post_author( $post_meta, $post_data['status'] ) : $this->get_default_author( $post_data['status'] );
 			$post_data['comments'] = $post_meta ? $this->get_post_comments( $post_meta ) : array();
 
-			// Set the comment status
+			// Set the comment status.
 			$post_data['comment_status'] = ! empty( $post_meta['write_comment_permissions'] ) && 'none' === $post_meta['write_comment_permissions']
 				? 'closed'
 				: 'open';
 
-			// Handle podcast posts - prepend an Gutenberg audio block to the post content.
+			// Handle podcast posts - prepend a Gutenberg audio block to the post content.
 			if ( 'podcast' === $post['type'] && ! empty( $post['podcast_url'] ) ) {
 				$post_data = $this->handle_podcast_post( $post_data, $post );
 			}
@@ -261,6 +309,20 @@ class Converter {
 			$post_data = apply_filters( 'substack_importer_post_data', $post_data, $post );
 
 			$this->generator->add_post( $post_data );
+
+			/**
+			 * Fires after a single Substack post has been converted and added to the WXR.
+			 *
+			 * Useful for logging, progress tracking, or performing cleanup after each post.
+			 *
+			 * @since 1.2.0
+			 *
+			 * @param array      $post_data The final post data that was added to the WXR.
+			 * @param array      $post      The raw Substack post data from the CSV.
+			 * @param array|null $post_meta The post metadata from the Substack API response.
+			 * @param int        $id        The Substack post ID.
+			 */
+			do_action( 'substack_importer_after_post', $post_data, $post, $post_meta, $id );
 		}
 	}
 
@@ -299,26 +361,56 @@ class Converter {
 	}
 
 	/**
-	 * Add the subtitle to the html_content by prepending a h2
+	 * Add the subtitle to the html_content by prepending a h2.
 	 *
-	 * @param array $post
+	 * @param array $post The post data containing subtitle and html_body.
 	 *
-	 * @return string html body content
+	 * @return string html body content.
 	 */
 	protected function add_subtitle( $post ) {
 		$heading = sprintf( '<h2>%s</h2>', $post['subtitle'] );
+
+		/**
+		 * Filter the subtitle HTML before it is prepended to the post content.
+		 *
+		 * Return an empty string to skip the subtitle entirely.
+		 * Useful for changing the heading level, wrapping in custom markup,
+		 * or conditionally removing subtitles.
+		 *
+		 * @since 1.2.0
+		 *
+		 * @param string $heading  The subtitle HTML (default: an h2 element).
+		 * @param array  $post     The raw Substack post data containing 'subtitle' and 'html_body'.
+		 */
+		$heading = apply_filters( 'substack_importer_subtitle', $heading, $post );
+
 		return $heading . $post['html_body'];
 	}
 
 	/**
-	 * Get a Gutenberg Audio block for the podcast
-	 * @param $audio_url
+	 * Get a Gutenberg Audio block for the podcast.
 	 *
-	 * @return string
+	 * @param string $audio_url The URL of the podcast audio file.
+	 *
+	 * @return string The Gutenberg audio block HTML.
 	 */
 	protected function get_audio_block( $audio_url ) {
-		$code = '<!-- wp:audio --><figure class="wp-block-audio"><audio controls src="%s"></audio><figcaption>Podcast</figcaption></figure><!-- /wp:audio -->';
-		return sprintf( $code, $audio_url );
+		$code  = '<!-- wp:audio --><figure class="wp-block-audio"><audio controls src="%s"></audio><figcaption>Podcast</figcaption></figure><!-- /wp:audio -->';
+		$block = sprintf( $code, $audio_url );
+
+		/**
+		 * Filter the Gutenberg audio block HTML for podcast posts.
+		 *
+		 * Allows modification or replacement of the audio block that is
+		 * prepended to podcast post content. Useful for using a custom
+		 * audio player block or adding additional markup.
+		 *
+		 * @since 1.2.0
+		 *
+		 * @param string $block     The Gutenberg audio block HTML.
+		 * @param string $audio_url The URL of the podcast audio file.
+		 */
+		return apply_filters( 'substack_importer_audio_block', $block, $audio_url );
 	}
 
 	protected function get_post_author( $post_meta, $post_status ) {
@@ -596,6 +688,42 @@ class Converter {
 			return;
 		}
 
+		/**
+		 * Filter the result of a single node conversion to a Gutenberg block.
+		 *
+		 * Allows modification of the block name and attributes after the default
+		 * conversion logic has run. Return a block_name of null to skip the node.
+		 * Useful for overriding how specific Substack elements are converted,
+		 * adding custom attributes, or changing block types.
+		 *
+		 * @since 1.2.0
+		 *
+		 * @param array      $block_data {
+		 *     The block conversion result.
+		 *
+		 *     @type string $block_name       The Gutenberg block name (e.g. 'wp:paragraph').
+		 *     @type array  $block_attributes The block attributes array.
+		 * }
+		 * @param DomElement $node      The converted DOM node.
+		 * @param string     $node_name The original HTML tag name (e.g. 'p', 'div', 'h2').
+		 */
+		$block_data = apply_filters(
+			'substack_importer_converted_node',
+			array(
+				'block_name'       => $block_name,
+				'block_attributes' => $block_attributes,
+			),
+			$node,
+			$node_name
+		);
+
+		$block_name       = $block_data['block_name'];
+		$block_attributes = $block_data['block_attributes'];
+
+		if ( ! $block_name ) {
+			return;
+		}
+
 		// Create the Gutenberg block code
 		$attributes_part = '';
 		if ( is_countable( $block_attributes ) && count( $block_attributes ) ) {
@@ -764,10 +892,29 @@ class Converter {
 		$block_attributes['sizeSlug']        = 'large';
 		$block_attributes['linkDestination'] = 'none';
 
-		return array(
+		$result = array(
 			'block_attributes' => $block_attributes,
 			'node'             => $new_node,
 		);
+
+		/**
+		 * Filter the image node conversion result.
+		 *
+		 * Allows modification of the image block attributes and node after
+		 * the default conversion. Useful for adjusting image sizes, adding
+		 * custom classes, modifying captions, or changing link destinations.
+		 *
+		 * @since 1.2.0
+		 *
+		 * @param array      $result {
+		 *     The image conversion result.
+		 *
+		 *     @type array      $block_attributes The image block attributes (sizeSlug, linkDestination, width, caption).
+		 *     @type DomElement $node             The figure DOM element for the image block.
+		 * }
+		 * @param array|null $image_data The decoded image data from the Substack data-attrs attribute.
+		 */
+		return apply_filters( 'substack_importer_image_result', $result, $image_data );
 	}
 
 	/**
@@ -798,6 +945,35 @@ class Converter {
 	protected function convert_embed_node( DomElement $node, DomElement $parent ) {
 
 		$first_class = explode( ' ', $node->getAttribute( 'class' ) )[0];
+
+		/**
+		 * Short-circuit the embed node conversion before default handling.
+		 *
+		 * Return a non-null array to skip the built-in switch statement entirely.
+		 * The returned array must have keys: 'node', 'block_attributes', 'block_name'.
+		 * Useful for handling unsupported embed types, overriding the default
+		 * conversion for a specific provider, or adding entirely new providers.
+		 *
+		 * @since 1.2.0
+		 *
+		 * @param array|null $pre_result  Return non-null to short-circuit. Expected keys:
+		 *                                'node' (DomElement|null), 'block_attributes' (array),
+		 *                                'block_name' (string|null).
+		 * @param DomElement $node        The embed DOM node before conversion.
+		 * @param DomElement $parent      The parent DOM element.
+		 * @param string     $first_class The CSS class identifying the embed type (e.g. 'youtube-wrap', 'tweet').
+		 */
+		$pre_result = apply_filters(
+			'substack_importer_pre_embed_conversion',
+			null,
+			$node,
+			$parent,
+			$first_class
+		);
+
+		if ( null !== $pre_result ) {
+			return $pre_result;
+		}
 
 		switch ( $first_class ) {
 
@@ -847,7 +1023,26 @@ class Converter {
 
 		}
 
-		return $output;
+		/**
+		 * Filter the embed node conversion result.
+		 *
+		 * Allows modification of the embed block name, attributes, and node
+		 * after the default conversion. Useful for adding support for
+		 * additional embed providers, modifying embed URLs, or changing
+		 * how specific embeds are represented.
+		 *
+		 * @since 1.2.0
+		 *
+		 * @param array  $output {
+		 *     The embed conversion result.
+		 *
+		 *     @type string|null      $block_name       The Gutenberg block name (e.g. 'wp:embed').
+		 *     @type array            $block_attributes The block attributes (url, type, providerNameSlug, etc.).
+		 *     @type DomElement|null  $node             The converted DOM node.
+		 * }
+		 * @param string $first_class The CSS class identifying the embed type (e.g. 'youtube-wrap', 'tweet').
+		 */
+		return apply_filters( 'substack_importer_embed_result', $output, $first_class );
 	}
 
 	/**
