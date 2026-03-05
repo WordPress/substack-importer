@@ -6,7 +6,8 @@
  * Author:          wordpressdotorg
  * Text Domain:     substack-importer
  * Version:         1.1.2
- * requires PHP:    7.2
+ * Requires PHP:    7.4
+ * Tested up to:    6.9
  *
  * @package         SubstackImporter
  */
