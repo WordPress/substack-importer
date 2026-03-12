@@ -297,7 +297,7 @@ class Importer_Admin {
 		// To allow podcast uploads, we need to allow the mimetype.
 		$this->allow_mpga_mime();
 
-		$wp_importer = new WP_Import();
+		$wp_importer           = new WP_Import();
 		$this->import_behavior = $this->get_import_behavior_from_request();
 		$this->register_import_behavior_hooks();
 
@@ -404,9 +404,9 @@ class Importer_Admin {
 		}
 
 		if ( isset( $this->import_behavior['date_mode'] ) && 'import' === $this->import_behavior['date_mode'] ) {
-			$now_gmt               = current_time( 'mysql', true );
+			$now_gmt                    = current_time( 'mysql', true );
 			$post_data['post_date_gmt'] = $now_gmt;
-			$post_data['post_date'] = get_date_from_gmt( $now_gmt );
+			$post_data['post_date']     = get_date_from_gmt( $now_gmt );
 		}
 
 		return $post_data;
@@ -558,7 +558,7 @@ class Importer_Admin {
 			return (int) $attachment_id;
 		}
 
-		$url_no_query = preg_replace( '/[?#].*/', '', $normalized_url );
+		$url_no_query  = preg_replace( '/[?#].*/', '', $normalized_url );
 		$attachment_id = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value = %s LIMIT 1",
