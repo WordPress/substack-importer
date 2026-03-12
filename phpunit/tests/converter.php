@@ -109,7 +109,9 @@ class Tests_Converter extends WP_UnitTestCase {
 						$this->assertTrue( is_array( $post ) );
 						$this->assertEquals( 123, $post['id'] );
 						$this->assertEquals( '_unknown', $post['author'] );
-						$this->assertEmpty( $post['metas'] );
+						$this->assertCount( 1, $post['metas'] );
+						$this->assertSame( '_substack_first_image_url', $post['metas'][0]['key'] );
+						$this->assertNotEmpty( $post['metas'][0]['value'] );
 						$this->assertEmpty( $post['comments'] );
 						$this->assertEmpty( $post['post_taxonomies'] );
 						$this->assertEquals( '2021-03-09T04:44:14.437Z', $post['date'] );
@@ -120,8 +122,8 @@ class Tests_Converter extends WP_UnitTestCase {
 						// Test for the presence of Gutenberg blocks in the content
 						$this->assertStringContainsString( '<!-- wp:paragraph -->', $post['content'] );
 						$this->assertStringContainsString( '<!-- wp:quote -->', $post['content'] );
-						$this->assertStringContainsString( '<!-- wp:heading {"level":1} -->', $post['content'] );
-						$this->assertStringContainsString( '<!-- wp:heading {"level":2} -->', $post['content'] );
+						$this->assertStringContainsString( '<!-- wp:heading --><h2 class="wp-block-heading">A H1</h2><!-- /wp:heading -->', $post['content'] );
+						$this->assertStringContainsString( '<!-- wp:heading --><h2 class="wp-block-heading">A H2</h2><!-- /wp:heading -->', $post['content'] );
 						$this->assertStringContainsString( '<!-- wp:heading {"level":3} -->', $post['content'] );
 						$this->assertStringContainsString( '<!-- wp:heading {"level":4} -->', $post['content'] );
 						$this->assertStringContainsString( '<!-- wp:heading {"level":5} -->', $post['content'] );
@@ -134,7 +136,7 @@ class Tests_Converter extends WP_UnitTestCase {
 						$this->assertStringContainsString( '<!-- wp:verse -->', $post['content'] );
 
 						// Check if the subtitle is added at the beginning of the post
-						$this->assertStringStartsWith( '<!-- wp:heading {"level":2} --><h2>Subtitle Example', $post['content'] );
+						$this->assertStringStartsWith( '<!-- wp:heading --><h2 class="wp-block-heading">Subtitle Example', $post['content'] );
 
 						// Check embeds in the content
 						$provider_slug_pattern = '/wp:embed.+?"providerNameSlug":"%s".+?-->/';
@@ -415,7 +417,9 @@ class Tests_Converter extends WP_UnitTestCase {
 							// Check the converted post as it is passed to the Generator to
 							// verify the values are set as expected.
 							$this->assertArrayHasKey( 'metas', $post );
-							$this->assertEquals( 0, count( $post['metas'] ) );
+							$this->assertCount( 1, $post['metas'] );
+							$this->assertSame( '_substack_first_image_url', $post['metas'][0]['key'] );
+							$this->assertNotEmpty( $post['metas'][0]['value'] );
 						}
 					);
 
@@ -635,7 +639,7 @@ class Tests_Converter extends WP_UnitTestCase {
 						}
 						// Verify the subtitle is using h3 instead of h2.
 						$this->assertStringContainsString(
-							'<h3 class="custom-subtitle">Subtitle Example</h3>',
+							'<h3 class="wp-block-heading">Subtitle Example</h3>',
 							$post['content']
 						);
 					}
