@@ -281,6 +281,14 @@ class Converter {
 				'metas'           => array(),
 			);
 
+			$first_image_url = $this->get_first_image_url_from_html( $post['html_body'] );
+			if ( ! empty( $first_image_url ) ) {
+				$post_data['metas'][] = array(
+					'key'   => '_substack_first_image_url',
+					'value' => $first_image_url,
+				);
+			}
+
 			if ( isset( $post_id[1] ) ) {
 				$post_data['post_name'] = $post_id[1];
 			}
@@ -667,8 +675,18 @@ class Converter {
 			case 'h4':
 			case 'h5':
 			case 'h6':
-				$block_name                = 'wp:heading';
-				$block_attributes['level'] = (int) substr( $node_name, 1, 1 );
+				$block_name = 'wp:heading';
+
+				// Gutenberg defaults to h2 for heading blocks without a level attribute.
+				if ( 'h1' === $node_name ) {
+					$node = $this->replace_html_node_tag( $node, $parent, 'h2' );
+				}
+
+				$node->setAttribute( 'class', 'wp-block-heading' );
+
+				if ( ! in_array( $node_name, array( 'h1', 'h2' ), true ) ) {
+					$block_attributes['level'] = (int) substr( $node_name, 1, 1 );
+				}
 				break;
 
 			case 'a':
@@ -1449,6 +1467,34 @@ class Converter {
 	}
 
 	/**
+	 * Replace an HTML node tag while preserving its attributes and child nodes.
+	 *
+	 * @param DomElement $node Existing node.
+	 * @param DomElement $parent Parent node.
+	 * @param string     $new_tag_name New node tag.
+	 *
+	 * @return DomElement
+	 */
+	protected function replace_html_node_tag( DomElement $node, DomElement $parent, $new_tag_name ) {
+		$document = $node->ownerDocument; //phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+		$new_node = $document->createElement( $new_tag_name );
+
+		if ( $node->hasAttributes() ) { //phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+			foreach ( $node->attributes as $attribute ) { //phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+				$new_node->setAttribute( $attribute->nodeName, $attribute->nodeValue ); //phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+			}
+		}
+
+		while ( $node->hasChildNodes() ) { //phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+			$new_node->appendChild( $node->firstChild ); //phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+		}
+
+		$parent->replaceChild( $new_node, $node );
+
+		return $new_node;
+	}
+
+	/**
 	 * Retrieve additional post information through the Substack Post API.
 	 *
 	 * The most important data we are after includes author information and comments as this currently is not provided
@@ -1621,6 +1667,54 @@ class Converter {
 			$post['html_body'] = $zip->getFromName( sprintf( 'posts/%s.html', $post['post_id'] ) );
 			yield $post;
 		}
+	}
+
+	/**
+	 * Extract the first image URL from post HTML.
+	 *
+	 * @param string $html HTML body from the Substack export.
+	 *
+	 * @return string|null
+	 */
+	protected function get_first_image_url_from_html( $html ) {
+		if ( empty( $html ) ) {
+			return null;
+		}
+
+		$document = new DOMDocument();
+		$previous = libxml_use_internal_errors( true );
+		$loaded   = $document->loadHTML( '<?xml encoding="utf-8" ?>' . $html );
+		libxml_clear_errors();
+		libxml_use_internal_errors( $previous );
+
+		if ( ! $loaded ) {
+			return null;
+		}
+
+		$images = $document->getElementsByTagName( 'img' );
+		if ( 0 === $images->count() ) {
+			return null;
+		}
+
+		$image = $images->item( 0 );
+		if ( ! $image instanceof DOMElement ) {
+			return null;
+		}
+
+		$data_attrs = $image->getAttribute( 'data-attrs' );
+		if ( ! empty( $data_attrs ) ) {
+			$decoded_data = json_decode( html_entity_decode( $data_attrs, ENT_QUOTES ), true );
+			if ( is_array( $decoded_data ) && ! empty( $decoded_data['src'] ) ) {
+				return esc_url_raw( $decoded_data['src'] );
+			}
+		}
+
+		$src = $image->getAttribute( 'src' );
+		if ( ! empty( $src ) ) {
+			return esc_url_raw( $src );
+		}
+
+		return null;
 	}
 
 	/**
