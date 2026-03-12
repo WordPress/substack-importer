@@ -321,47 +321,30 @@ class Importer_Admin {
 	 * @return string
 	 */
 	protected function inject_substack_import_options( $import_options_html ) {
-		$options_html  = '<h3>' . esc_html__( 'Substack Import Options', 'substack-importer' ) . '</h3>';
-		$options_html .= '<p>';
-		$options_html .= '<label for="substack-force-draft">';
-		$options_html .= '<input type="checkbox" value="1" name="substack_force_draft" id="substack-force-draft" />';
-		$options_html .= ' ' . esc_html__( 'Import all posts as Draft.', 'substack-importer' );
-		$options_html .= '</label>';
-		$options_html .= '</p>';
-		$options_html .= '<p>';
-		$options_html .= '<label for="substack-set-featured-image">';
-		$options_html .= '<input type="checkbox" value="1" name="substack_set_featured_image" id="substack-set-featured-image" />';
-		$options_html .= ' ' . esc_html__( 'Use the first image as Featured Image.', 'substack-importer' );
-		$options_html .= '</label>';
-		$options_html .= '</p>';
-		$options_html .= '<p><strong>' . esc_html__( 'Publish Date', 'substack-importer' ) . '</strong></p>';
-		$options_html .= '<p>';
-		$options_html .= '<label for="substack-date-mode-original">';
-		$options_html .= '<input type="radio" name="substack_publish_date_mode" id="substack-date-mode-original" value="original" checked="checked" />';
-		$options_html .= ' ' . esc_html__( 'Use original Substack publish date.', 'substack-importer' );
-		$options_html .= '</label><br />';
-		$options_html .= '<label for="substack-date-mode-import">';
-		$options_html .= '<input type="radio" name="substack_publish_date_mode" id="substack-date-mode-import" value="import" />';
-		$options_html .= ' ' . esc_html__( 'Use import date (now) for all imported posts.', 'substack-importer' );
-		$options_html .= '</label>';
-		$options_html .= '</p>';
-		$options_html .= '<p><strong>' . esc_html__( 'Apply Category or Tag to all imported posts', 'substack-importer' ) . '</strong></p>';
-		$options_html .= '<p>';
-		$options_html .= '<input type="text" name="substack_global_term_name" id="substack-global-term-name" placeholder="' . esc_attr__( 'Example: substack-imported', 'substack-importer' ) . '" />';
-		$options_html .= '</p>';
-		$options_html .= '<p>';
-		$options_html .= '<label for="substack-global-term-taxonomy">' . esc_html__( 'Apply as', 'substack-importer' ) . ': </label>';
-		$options_html .= '<select name="substack_global_term_taxonomy" id="substack-global-term-taxonomy">';
-		$options_html .= '<option value="post_tag">' . esc_html__( 'Tag', 'substack-importer' ) . '</option>';
-		$options_html .= '<option value="category">' . esc_html__( 'Category', 'substack-importer' ) . '</option>';
-		$options_html .= '</select>';
-		$options_html .= '</p>';
+		$options_html = $this->render_partial_markup( 'substack-import-options' );
 
 		if ( false !== strpos( $import_options_html, '<p class="submit">' ) ) {
 			return str_replace( '<p class="submit">', $options_html . '<p class="submit">', $import_options_html );
 		}
 
 		return $import_options_html . $options_html;
+	}
+
+	/**
+	 * Render a partial template and return the generated markup.
+	 *
+	 * @param string $partial The name of the partial.
+	 * @param array  $vars Variables to load into the partial.
+	 *
+	 * @return string
+	 */
+	protected function render_partial_markup( $partial, $vars = array() ) {
+		extract( $vars, EXTR_SKIP ); //phpcs:ignore WordPress.PHP.DontExtract.extract_extract --internal usage only
+
+		ob_start();
+		include __DIR__ . '/../partials/' . $partial . '.php';
+
+		return (string) ob_get_clean();
 	}
 
 	/**
@@ -712,12 +695,7 @@ class Importer_Admin {
 	 * @param array $vars Variables to load into the partial
 	 */
 	protected function render_page( $partial, $vars = array() ) {
-
-		extract( $vars, EXTR_SKIP ); //phpcs:ignore WordPress.PHP.DontExtract.extract_extract --internal usage only
-
-		ob_start();
-		include __DIR__ . '/../partials/' . $partial . '.php';
-		$content = ob_get_clean();
+		$content = $this->render_partial_markup( $partial, $vars );
 
 		include __DIR__ . '/../partials/container.php';
 	}
