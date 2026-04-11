@@ -45,6 +45,8 @@ Tests can be run with wp-env or with any local WordPress setup paired with a Doc
 
 = 1.2.0 =
 * Compatibility: the plugin now requires PHP 7.4 or higher.
+* Enhancement: added new pre-import options for forcing Draft status, choosing publish date mode, setting the first image as Featured Image, and applying a global Category/Tag.
+* Enhancement: improved import behavior handling for featured image assignment and post metadata processing during import.
 * Enhancement: added `substack_importer_paywall_marker_text` filter to customize paywall marker text.
 * Enhancement: added `substack_importer_paywall_content` filter to override paywall block conversion.
 * Enhancement: added `substack_importer_post_content_after_conversion` filter to modify content after Gutenberg conversion.
