@@ -5,7 +5,7 @@
  * Description:     A plugin that lets you import content from Substack to your WordPress site
  * Author:          wordpressdotorg
  * Text Domain:     substack-importer
- * Version:         1.1.2
+ * Version:         1.2.0
  * Requires PHP:    7.4
  * Tested up to:    6.9
  *
